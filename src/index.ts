@@ -1,18 +1,22 @@
-import { parseUsername } from "./parseUsername";
+import { displayActivities } from "./views/displayActivities";
+import Event from "./models/event";
+import { fetchActivities } from "./api/fetchActivities";
+import { parseUsername, UserName } from "./models/username";
 
-const argument = process.argv.slice(2)[0];
+function main(argument: string) {
+  if (!parseUsername(argument)) {
+    console.error("invalid input");
+    process.exit(1);
+  }
 
-if (!parseUsername(argument)) {
-  throw new Error("invalid input");
+  fetchActivities(argument)
+    .then((activities) => {
+      displayActivities(activities);
+    })
+    .catch((err) => {
+      console.error(err.message);
+      process.exit(1);
+    });
 }
 
-console.log(`https://api.github.com/users/${argument}/events`);
-
-const activity = fetch(`https://api.github.com/users/${argument}/events`)
-  .then((res) => {
-    if (!res.ok) throw new Error("github error ");
-    else return res.json() as Promise<Event[]>;
-  })
-  .then((data) => {
-    (data as any[]).map((item) => console.log(item.payload.action));
-  });
+main(process.argv.slice(2)[0]);
